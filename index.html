@@ -406,7 +406,7 @@ footer strong{color:#fff}
           </button>
           <button class="reset-btn" onclick="resetDemo()">↺ Reset</button>
         </div>
-        <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Simulated conversation — Rekha's Hindi voice query → scheme matching → document checklist</p>
+        <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">🔊 Bot replies as voice bubbles — tap ▶ on any green button to hear Hindi audio · Rekha's voice query → AI scheme matching → spoken reply</p>
       </div>
     </div>
   </div>
@@ -714,23 +714,88 @@ new Chart(ctx, {
 })
 
 /* WHATSAPP DEMO */
+
+// Bot replies: type:'audio-in' → rendered as incoming audio bubble with TTS playback
+// ttsText = what Web Speech API speaks (Hindi)
+// hindi   = transcript shown below waveform
 const conversation = [
   { type: 'audio-out', text: 'Namaste VaaniSetu 🙏', hindi: 'नमस्ते वाणी सेतु', duration: '0:08', delay: 600 },
   { type: 'typing', delay: 1400 },
-  { type: 'in', text: 'Namaste! Main VaaniSetu hoon. Aapki poori madad karunga 🙂\n\nApna naam, state, aur kuch apne baare mein bataiye — jaise aamdani, zameen, parivaar. Hindi mein boliye, main samjhunga.', delay: 2200 },
+  {
+    type: 'audio-in',
+    duration: '0:12',
+    hindi: 'नमस्ते! मैं वाणी सेतु हूं। अपना नाम, राज्य और परिवार के बारे में बताइए।',
+    ttsText: 'Namaste! Main VaaniSetu hoon. Apna naam, state, aur parivaar ke baare mein bataiye. Hindi mein boliye, main samjhunga.',
+    delay: 2200
+  },
   { type: 'audio-out', text: 'Mera naam Rekha hai. Main Maharashtra ke Wardha mein rehti hoon. Mere paas 2 acre zameen hai. Main vidhwa hoon. Mahine ki kamai lagbhag 7,000 rupaye hai.', hindi: 'मेरा नाम रेखा है। मैं महाराष्ट्र के वर्धा में रहती हूं।', duration: '0:22', delay: 1000 },
   { type: 'typing', delay: 2000 },
   { type: 'schemes', delay: 2800 },
-  { type: 'in', text: 'Reko ji, aapke liye nearest CSC ka location bhi bhej rahi hoon 📍\n\n7 din baad follow-up karungi — CSC gayeen ya nahi?', delay: 800 },
+  {
+    type: 'audio-in',
+    duration: '0:18',
+    hindi: 'रेखा जी, आपको चार योजनाएं मिली हैं। पीएम किसान, आयुष्मान भारत, विधवा पेंशन और पीएम आवास योजना। नजदीकी CSC का पता भेज रही हूं।',
+    ttsText: 'Rekha ji, aapko char yojanaen mili hain. PM Kisan, Ayushman Bharat, Vidhwa Pension, aur PM Awas Yojana. Nearest CSC ka location abhi bhej rahi hoon.',
+    delay: 800
+  },
   { type: 'map-pin', delay: 600 },
+  {
+    type: 'audio-in',
+    duration: '0:08',
+    hindi: '७ दिन बाद follow-up करूंगी — CSC गईं या नहीं?',
+    ttsText: 'Saat din baad follow-up karungi — CSC gayeen ya nahi? Reply karein.',
+    delay: 700
+  },
 ]
 
-let step = 0, running = false, typingEl = null, resetTimer = null
+let running = false, typingEl = null
 
-function makeWaveform() {
+/* --- TTS helper: speaks Hindi text via Web Speech API --- */
+function speakHindi(text, btn) {
+  if (!window.speechSynthesis) return
+  window.speechSynthesis.cancel()
+  const utter = new SpeechSynthesisUtterance(text)
+  utter.lang = 'hi-IN'
+  utter.rate = 0.92
+  utter.pitch = 1.05
+
+  // Try to find a Hindi voice; fall back to any available voice
+  const voices = window.speechSynthesis.getVoices()
+  const hiVoice = voices.find(v => v.lang === 'hi-IN') || voices.find(v => v.lang.startsWith('hi')) || null
+  if (hiVoice) utter.voice = hiVoice
+
+  const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+  const playIcon  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+
+  btn.innerHTML = pauseIcon
+  window.speechSynthesis.speak(utter)
+
+  utter.onend = () => { btn.innerHTML = playIcon }
+  utter.onerror = () => { btn.innerHTML = playIcon }
+
+  btn._utterance = utter
+  btn._speaking = true
+}
+
+function toggleTTS(btn, text) {
+  const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+  const playIcon  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+  if (window.speechSynthesis && window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel()
+    btn.innerHTML = playIcon
+  } else {
+    speakHindi(text, btn)
+  }
+}
+
+/* --- Waveform builder --- */
+function makeWaveform(variant) {
   const w = document.createElement('div')
   w.className = 'audio-wave'
-  const heights = [6,10,16,20,14,22,18,12,24,16,10,20,14,8,18,22,12,16,10,20]
+  // Two slightly different waveform shapes for variety
+  const h1 = [6,10,16,20,14,22,18,12,24,16,10,20,14,8,18,22,12,16,10,20]
+  const h2 = [8,14,10,22,18,12,20,16,8,24,12,18,14,20,10,16,22,8,12,18]
+  const heights = variant === 'in' ? h2 : h1
   heights.forEach(h => {
     const b = document.createElement('div')
     b.className = 'wave-bar'
@@ -740,19 +805,109 @@ function makeWaveform() {
   return w
 }
 
-function addBubble(html, cls, delay, extraClass) {
-  return new Promise(res => {
-    setTimeout(() => {
-      const d = document.getElementById('waBody')
-      const el = document.createElement('div')
-      el.className = `bubble ${cls}`
-      if (extraClass) el.className += ' ' + extraClass
-      el.innerHTML = html
-      d.appendChild(el)
-      d.scrollTop = d.scrollHeight
-      requestAnimationFrame(() => { setTimeout(() => { el.classList.add('show'); res() }, 30) })
-    }, delay)
-  })
+/* --- Build an outgoing audio bubble (user, green, right) --- */
+function buildAudioOutBubble(msg, timeStr) {
+  const wrap = document.createElement('div')
+  wrap.className = 'bubble bubble-out audio-bubble'
+  const btn = document.createElement('button')
+  btn.className = 'audio-play'
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+  btn.onclick = () => {
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+    setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' }, 2200)
+  }
+  const wave = makeWaveform('out')
+  const dur = document.createElement('span')
+  dur.className = 'audio-dur'
+  dur.textContent = msg.duration
+  const time = document.createElement('div')
+  time.className = 'bubble-time'
+  time.textContent = timeStr + ' ✓✓'
+  const inner = document.createElement('div')
+  inner.style.cssText = 'display:flex;flex-direction:column;gap:4px;width:100%'
+  const row = document.createElement('div')
+  row.style.cssText = 'display:flex;align-items:center;gap:8px'
+  row.appendChild(btn); row.appendChild(wave); row.appendChild(dur)
+  if (msg.hindi) {
+    const ht = document.createElement('div')
+    ht.className = 'devanagari'
+    ht.style.cssText = 'font-size:11px;color:rgba(0,0,0,0.5);margin-top:2px'
+    ht.textContent = msg.hindi
+    inner.appendChild(row); inner.appendChild(ht); inner.appendChild(time)
+  } else { inner.appendChild(row); inner.appendChild(time) }
+  wrap.appendChild(inner)
+  return wrap
+}
+
+/* --- Build an incoming audio bubble (bot, white, left) with TTS --- */
+function buildAudioInBubble(msg, timeStr) {
+  const wrap = document.createElement('div')
+  wrap.className = 'bubble bubble-in audio-bubble'
+  wrap.style.cssText = 'max-width:82%;background:#fff;align-self:flex-start;border-bottom-left-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.08)'
+
+  const btn = document.createElement('button')
+  btn.className = 'audio-play'
+  btn.style.background = '#25d366'
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+  btn.onclick = () => toggleTTS(btn, msg.ttsText)
+
+  // Animate wave bars while speaking
+  if (window.speechSynthesis) {
+    const origToggle = btn.onclick
+    btn.onclick = () => {
+      origToggle()
+      animateWave(wave, btn)
+    }
+  }
+
+  const wave = makeWaveform('in')
+  // Give the wave bars a slightly darker tint for incoming
+  wave.querySelectorAll && setTimeout(() => {
+    wave.querySelectorAll('.wave-bar').forEach(b => { b.style.background = 'rgba(0,0,0,0.25)' })
+  }, 0)
+
+  const dur = document.createElement('span')
+  dur.className = 'audio-dur'
+  dur.textContent = msg.duration
+
+  const time = document.createElement('div')
+  time.className = 'bubble-time'
+  time.textContent = timeStr
+
+  const inner = document.createElement('div')
+  inner.style.cssText = 'display:flex;flex-direction:column;gap:4px;width:100%'
+  const row = document.createElement('div')
+  row.style.cssText = 'display:flex;align-items:center;gap:8px'
+  row.appendChild(btn); row.appendChild(wave); row.appendChild(dur)
+
+  const ht = document.createElement('div')
+  ht.className = 'devanagari'
+  ht.style.cssText = 'font-size:11px;color:rgba(0,0,0,0.45);margin-top:2px'
+  ht.textContent = msg.hindi
+
+  inner.appendChild(row); inner.appendChild(ht); inner.appendChild(time)
+  wrap.appendChild(inner)
+  return wrap
+}
+
+/* Animate waveform bars while TTS is playing */
+function animateWave(waveEl, btn) {
+  const bars = waveEl.querySelectorAll('.wave-bar')
+  const heights = [6,14,10,22,18,12,20,16,8,24,12,18,14,20,10,16,22,8,12,18]
+  let frame = 0
+  const interval = setInterval(() => {
+    if (!window.speechSynthesis.speaking) {
+      clearInterval(interval)
+      bars.forEach((b, i) => { b.style.height = heights[i] + 'px'; b.style.background = 'rgba(0,0,0,0.25)' })
+      return
+    }
+    bars.forEach(b => {
+      const rh = Math.floor(Math.random() * 20) + 4
+      b.style.height = rh + 'px'
+      b.style.background = '#25d366'
+    })
+    frame++
+  }, 120)
 }
 
 async function startDemo() {
@@ -769,35 +924,23 @@ async function startDemo() {
     await new Promise(res => setTimeout(res, msg.delay || 600))
 
     if (msg.type === 'audio-out') {
-      const wrap = document.createElement('div')
-      wrap.className = 'bubble bubble-out audio-bubble'
-      const btn = document.createElement('button')
-      btn.className = 'audio-play'
-      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
-      btn.onclick = () => { btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' }, 2200) }
-      const wave = makeWaveform()
-      const dur = document.createElement('span')
-      dur.className = 'audio-dur'
-      dur.textContent = msg.duration
-      const time = document.createElement('div')
-      time.className = 'bubble-time'
-      time.textContent = timeStr + ' ✓✓'
-      const inner = document.createElement('div')
-      inner.style.cssText = 'display:flex;flex-direction:column;gap:4px;width:100%'
-      const row = document.createElement('div')
-      row.style.cssText = 'display:flex;align-items:center;gap:8px'
-      row.appendChild(btn); row.appendChild(wave); row.appendChild(dur)
-      if (msg.hindi) {
-        const ht = document.createElement('div')
-        ht.className = 'devanagari'
-        ht.style.cssText = 'font-size:11px;color:rgba(0,0,0,0.5);margin-top:2px'
-        ht.textContent = msg.hindi
-        inner.appendChild(row); inner.appendChild(ht); inner.appendChild(time)
-      } else { inner.appendChild(row); inner.appendChild(time) }
-      wrap.appendChild(inner)
+      const wrap = buildAudioOutBubble(msg, timeStr)
       d.appendChild(wrap)
       setTimeout(() => { wrap.classList.add('show') }, 30)
       d.scrollTop = d.scrollHeight
+
+    } else if (msg.type === 'audio-in') {
+      const wrap = buildAudioInBubble(msg, timeStr)
+      d.appendChild(wrap)
+      setTimeout(() => { wrap.classList.add('show') }, 30)
+      d.scrollTop = d.scrollHeight
+      // Auto-play the TTS for the first bot greeting to show it off
+      if (msg === conversation[2]) {
+        setTimeout(() => {
+          const btn = wrap.querySelector('.audio-play')
+          if (btn) { speakHindi(msg.ttsText, btn); animateWave(wrap.querySelector('.audio-wave'), btn) }
+        }, 600)
+      }
 
     } else if (msg.type === 'typing') {
       typingEl = document.createElement('div')
@@ -808,10 +951,6 @@ async function startDemo() {
       d.scrollTop = d.scrollHeight
       await new Promise(res => setTimeout(res, msg.delay || 1500))
       typingEl.remove()
-
-    } else if (msg.type === 'in') {
-      const html = `${msg.text.replace(/\n/g,'<br>')}<div class="bubble-time">${timeStr}</div>`
-      await addBubble(html, 'bubble-in')
 
     } else if (msg.type === 'schemes') {
       const card = document.createElement('div')
@@ -829,8 +968,12 @@ async function startDemo() {
       d.scrollTop = d.scrollHeight
 
     } else if (msg.type === 'map-pin') {
-      const html = `📍 <strong>Wardha CSC — 2.3 km</strong><br><span style="font-size:11px;color:#0b7a75">maps.google.com/wardha-csc → Open in Maps</span><div class="bubble-time">${timeStr}</div>`
-      await addBubble(html, 'bubble-in')
+      const wrap = document.createElement('div')
+      wrap.className = 'bubble bubble-in'
+      wrap.innerHTML = `📍 <strong>Wardha CSC — 2.3 km</strong><br><span style="font-size:11px;color:#0b7a75">maps.google.com/wardha-csc → Open in Maps</span><div class="bubble-time">${timeStr}</div>`
+      d.appendChild(wrap)
+      setTimeout(() => { wrap.classList.add('show') }, 30)
+      d.scrollTop = d.scrollHeight
     }
 
     await new Promise(res => setTimeout(res, 200))
@@ -844,6 +987,7 @@ async function startDemo() {
 
 function resetDemo() {
   running = false
+  window.speechSynthesis && window.speechSynthesis.cancel()
   if (typingEl) { typingEl.remove(); typingEl = null }
   const d = document.getElementById('waBody')
   d.innerHTML = '<div class="wa-date">Today</div>'
