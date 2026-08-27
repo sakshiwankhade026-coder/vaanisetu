@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VaaniSetu — Voice-First Welfare Navigator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --green: #1a6b3c;
+  --green-light: #e8f5ee;
+  --green-mid: #2d9e5f;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --ink: #0f1f0f;
+  --ink2: #2d3a2d;
+  --muted: #6b7a6b;
+  --border: #dde8dd;
+  --surface: #f7fbf7;
+  --white: #ffffff;
+  --wa-green: #25d366;
+  --wa-dark: #075e54;
+  --wa-bubble-out: #dcf8c6;
+  --wa-bubble-in: #ffffff;
+  --wa-bg: #e5ddd5;
+  --radius: 12px;
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:#fff;color:var(--ink);line-height:1.6;overflow-x:hidden}
+.devanagari{font-family:'Noto Sans Devanagari','Inter',sans-serif}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 2rem}
+.nav-inner{max-width:1100px;margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.nav-logo-icon svg{width:18px;height:18px;fill:white}
+.nav-brand{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-0.3px}
+.nav-brand span{color:var(--green-mid)}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{background:var(--green);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .2s}
+.nav-cta:hover{background:var(--green-mid)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;background:linear-gradient(160deg,#f0faf4 0%,#fff 60%);padding:80px 2rem 4rem}
+.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--green-light);color:var(--green);font-size:11px;font-weight:600;letter-spacing:0.06em;padding:5px 12px;border-radius:100px;margin-bottom:20px}
+.hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--green-mid);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+h1{font-size:clamp(2rem,4vw,3.2rem);font-weight:300;line-height:1.15;letter-spacing:-1px;color:var(--ink);margin-bottom:8px}
+h1 strong{font-weight:600;color:var(--green)}
+.hero-hindi{font-size:clamp(1rem,2vw,1.4rem);color:var(--muted);margin-bottom:24px;font-weight:400}
+.hero-desc{font-size:15px;color:var(--ink2);line-height:1.75;margin-bottom:32px;max-width:480px}
+.hero-stats{display:flex;gap:24px;margin-bottom:36px}
+.stat{text-align:left}
+.stat-num{font-size:22px;font-weight:600;color:var(--green);letter-spacing:-0.5px}
+.stat-label{font-size:11px;color:var(--muted);margin-top:1px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-primary{background:var(--green);color:#fff;padding:12px 24px;border-radius:10px;border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s;text-decoration:none;display:inline-block}
+.btn-primary:hover{background:var(--green-mid);transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,107,60,0.3)}
+.btn-secondary{background:transparent;color:var(--ink);padding:12px 24px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s;text-decoration:none;display:inline-block}
+.btn-secondary:hover{border-color:var(--green);color:var(--green)}
+
+/* PERSONA CARDS */
+.persona-cards{display:flex;flex-direction:column;gap:12px}
+.persona{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow);transition:transform .2s}
+.persona:hover{transform:translateY(-2px)}
+.persona-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.persona-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.av-rekha{background:#fef3c7}
+.av-suresh{background:#dbeafe}
+.persona-name{font-size:13px;font-weight:600;color:var(--ink)}
+.persona-meta{font-size:11px;color:var(--muted)}
+.persona-problem{font-size:12px;color:var(--ink2);line-height:1.55;border-left:3px solid var(--border);padding-left:10px;margin-bottom:10px}
+.persona-money{display:flex;align-items:center;justify-content:space-between}
+.persona-money-label{font-size:11px;color:var(--muted)}
+.persona-money-amt{font-size:14px;font-weight:600;color:var(--green)}
+.persona-unclaimed{font-size:11px;color:#dc2626;background:#fef2f2;padding:2px 8px;border-radius:100px}
+
+/* SECTION BASE */
+section{padding:80px 2rem}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-eyebrow{font-size:11px;font-weight:600;letter-spacing:0.08em;color:var(--green-mid);text-transform:uppercase;margin-bottom:10px}
+.section-title{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:300;letter-spacing:-0.5px;color:var(--ink);margin-bottom:12px}
+.section-title strong{font-weight:600}
+.section-sub{font-size:15px;color:var(--muted);max-width:600px;margin-bottom:48px;line-height:1.7}
+
+/* HOW IT WORKS */
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.how-steps{display:flex;flex-direction:column;gap:0}
+.how-step{display:flex;gap:16px;padding-bottom:28px;position:relative}
+.how-step:not(:last-child)::after{content:'';position:absolute;left:17px;top:36px;bottom:0;width:1.5px;background:var(--border)}
+.step-num{width:36px;height:36px;border-radius:50%;background:var(--green-light);border:2px solid var(--green);color:var(--green);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1}
+.step-body{}
+.step-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.step-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;margin-top:5px}
+.tag-sarvam{background:#ede9fe;color:#5b21b6}
+.tag-whatsapp{background:#dcfce7;color:#166534}
+.tag-llm{background:#fef3c7;color:#92400e}
+.tag-maps{background:#dbeafe;color:#1e40af}
+
+/* WHATSAPP DEMO */
+.wa-demo-wrap{background:#fff;border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:0 8px 48px rgba(0,0,0,0.12);max-width:380px;margin:0 auto}
+.wa-header{background:var(--wa-dark);padding:12px 16px;display:flex;align-items:center;gap:10px}
+.wa-avatar{width:36px;height:36px;border-radius:50%;background:var(--wa-green);display:flex;align-items:center;justify-content:center;font-size:16px}
+.wa-info{flex:1}
+.wa-name{color:#fff;font-size:13px;font-weight:500}
+.wa-status{color:rgba(255,255,255,0.6);font-size:11px}
+.wa-icons{display:flex;gap:14px}
+.wa-icons svg{width:18px;height:18px;fill:rgba(255,255,255,0.8)}
+.wa-body{background:var(--wa-bg);background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none'/%3E%3C/svg%3E");padding:12px;min-height:400px;display:flex;flex-direction:column;gap:8px;position:relative}
+.wa-date{text-align:center;font-size:10px;background:rgba(255,255,255,0.7);color:#555;padding:3px 10px;border-radius:100px;align-self:center;margin-bottom:4px}
+.bubble{max-width:82%;padding:8px 10px;border-radius:10px;font-size:12.5px;line-height:1.5;position:relative;opacity:0;transform:translateY(8px);transition:all .35s ease}
+.bubble.show{opacity:1;transform:translateY(0)}
+.bubble-out{background:var(--wa-bubble-out);align-self:flex-end;border-bottom-right-radius:2px;color:#1a1a1a}
+.bubble-in{background:var(--wa-bubble-in);align-self:flex-start;border-bottom-left-radius:2px;color:#1a1a1a;box-shadow:0 1px 2px rgba(0,0,0,0.08)}
+.bubble-time{font-size:10px;color:rgba(0,0,0,0.35);text-align:right;margin-top:2px}
+.bubble-hindi{font-family:'Noto Sans Devanagari',sans-serif;font-size:13px}
+.audio-bubble{display:flex;align-items:center;gap:8px;padding:8px 10px}
+.audio-play{width:32px;height:32px;border-radius:50%;background:var(--wa-green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.audio-play:hover{transform:scale(1.08)}
+.audio-play svg{width:14px;height:14px;fill:white;margin-left:2px}
+.audio-wave{flex:1;height:28px;display:flex;align-items:center;gap:1.5px}
+.wave-bar{width:3px;border-radius:2px;background:rgba(0,0,0,0.2);transition:height .1s}
+.audio-dur{font-size:11px;color:rgba(0,0,0,0.4);flex-shrink:0}
+.scheme-card-bubble{background:#fff;border-radius:10px;padding:10px;max-width:88%;align-self:flex-start;box-shadow:0 1px 3px rgba(0,0,0,0.1);opacity:0;transform:translateY(8px);transition:all .35s ease}
+.scheme-card-bubble.show{opacity:1;transform:translateY(0)}
+.scb-header{font-size:11px;font-weight:600;color:var(--green);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.scb-item{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px}
+.scb-dot{width:5px;height:5px;border-radius:50%;background:var(--green-mid);margin-top:5px;flex-shrink:0}
+.scb-text{font-size:11.5px;color:#1a1a1a;line-height:1.45}
+.scb-text strong{font-weight:600;color:var(--ink)}
+.scb-footer{margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0;font-size:11px;color:var(--muted)}
+.wa-footer{background:#f0f0f0;padding:8px 12px;display:flex;align-items:center;gap:8px}
+.wa-input{flex:1;background:#fff;border-radius:20px;padding:8px 14px;font-size:12px;color:#aaa;border:none}
+.wa-send{width:36px;height:36px;background:var(--wa-green);border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.wa-send svg{width:16px;height:16px;fill:white}
+.wa-mic{width:36px;height:36px;background:var(--wa-green);border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.wa-mic svg{width:16px;height:16px;fill:white}
+.demo-controls{display:flex;justify-content:center;gap:12px;margin-top:16px}
+.play-btn{background:var(--green);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all .2s}
+.play-btn:hover{background:var(--green-mid)}
+.play-btn svg{width:14px;height:14px;fill:white}
+.reset-btn{background:transparent;color:var(--muted);border:1px solid var(--border);padding:10px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s}
+.reset-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* CHECKLIST */
+.checklist-section{background:var(--surface)}
+.checklist-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.checklist-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.cc-header{padding:14px 16px;display:flex;align-items:center;gap:10px}
+.cc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.cc-scheme{font-size:13px;font-weight:600;color:var(--ink)}
+.cc-benefit{font-size:12px;color:var(--green-mid);font-weight:500}
+.cc-body{padding:0 16px 16px}
+.cc-label{font-size:10px;font-weight:600;letter-spacing:0.05em;color:var(--muted);margin-bottom:8px;padding-top:12px;border-top:1px solid var(--border)}
+.cc-item{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cc-item svg{width:14px;height:14px;flex-shrink:0;color:var(--green)}
+.cc-item span{font-size:12px;color:var(--ink2)}
+.cc-footer{margin:12px 0 0;padding:10px;background:var(--green-light);border-radius:8px;font-size:11.5px;color:var(--green);font-weight:500;text-align:center}
+
+/* GAP CHART */
+.chart-wrap{background:#fff;border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.chart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px}
+.chart-title{font-size:15px;font-weight:600;color:var(--ink)}
+.chart-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.chart-legend{display:flex;gap:16px;flex-shrink:0}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.ld-eligible{background:#bfdbfe}
+.ld-claimed{background:#1a6b3c}
+.ld-gap{background:#fbbf24}
+#gapChart{max-height:280px}
+
+/* MAP SECTION */
+.map-section{background:var(--ink);color:#fff}
+.map-section .section-eyebrow{color:var(--wa-green)}
+.map-section .section-title{color:#fff}
+.map-section .section-sub{color:rgba(255,255,255,0.6)}
+.map-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+.map-frame{border-radius:16px;overflow:hidden;border:2px solid rgba(255,255,255,0.1);box-shadow:0 8px 40px rgba(0,0,0,0.4)}
+.map-frame iframe{width:100%;height:340px;border:none;display:block}
+.map-info{display:flex;flex-direction:column;gap:16px}
+.map-stat-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px}
+.msc-num{font-size:28px;font-weight:600;color:var(--wa-green);letter-spacing:-0.5px}
+.msc-label{font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px}
+.msc-desc{font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;line-height:1.5}
+
+/* TECH STACK */
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tech-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .2s}
+.tech-card:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:var(--shadow)}
+.tc-icon{font-size:22px;margin-bottom:10px}
+.tc-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.tc-role{font-size:11px;color:var(--muted);line-height:1.5}
+.tc-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-top:6px;background:var(--green-light);color:var(--green)}
+
+/* ROADMAP */
+.roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.rm-card{border-radius:14px;padding:20px;border:1px solid var(--border)}
+.rm-1{background:var(--green-light);border-color:#b6dfc5}
+.rm-2{background:var(--amber-light);border-color:#fcd34d}
+.rm-3{background:#f0f9ff;border-color:#bae6fd}
+.rm-phase{font-size:10px;font-weight:700;letter-spacing:0.08em;margin-bottom:10px}
+.rm-1 .rm-phase{color:var(--green)}
+.rm-2 .rm-phase{color:var(--amber)}
+.rm-3 .rm-phase{color:#0369a1}
+.rm-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.rm-items{font-size:12px;color:var(--ink2);line-height:2}
+
+/* FOOTER */
+footer{background:var(--ink);color:rgba(255,255,255,0.5);padding:32px 2rem;text-align:center}
+footer p{font-size:12px}
+footer strong{color:#fff}
+.footer-badges{display:flex;justify-content:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+.fb{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:rgba(255,255,255,0.07);padding:5px 12px;border-radius:100px;color:rgba(255,255,255,0.7)}
+
+/* LANGUAGE BAR */
+.lang-bar{background:var(--green-light);border-bottom:1px solid var(--border);padding:8px 2rem}
+.lang-bar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px}
+.lang-bar-label{color:var(--green);font-weight:600;display:flex;align-items:center;gap:6px}
+.lang-select{background:#fff;border:1.5px solid var(--green);color:var(--ink);font-family:inherit;font-size:12px;font-weight:500;padding:5px 10px;border-radius:8px;cursor:pointer}
+.lang-same-toggle{display:flex;align-items:center;gap:6px;color:var(--ink2);cursor:pointer;user-select:none;margin-left:auto}
+.lang-same-toggle input{accent-color:var(--green);width:14px;height:14px;cursor:pointer}
+
+/* ASSISTANT (LIVE AI SECTION) */
+.assistant-section{background:linear-gradient(160deg,#f0faf4 0%,#fff 70%)}
+.assistant-card{background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 48px rgba(0,0,0,0.1);padding:24px;max-width:760px;margin:0 auto}
+.assistant-badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:100px;margin-bottom:14px}
+.assistant-input-wrap{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.assistant-textarea{flex:1;min-width:200px;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;color:var(--ink);resize:none;min-height:52px;transition:border-color .2s}
+.assistant-textarea:focus{outline:none;border-color:var(--green)}
+.assistant-mic{width:48px;height:48px;border-radius:50%;border:none;background:var(--green);color:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.assistant-mic svg{width:20px;height:20px;fill:#fff}
+.assistant-mic:hover{background:var(--green-mid)}
+.assistant-mic.listening{background:#dc2626;animation:mic-pulse 1.2s infinite}
+@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}50%{box-shadow:0 0 0 10px rgba(220,38,38,0)}}
+.assistant-send{background:var(--green);color:#fff;border:none;padding:0 20px;height:48px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0;transition:background .2s}
+.assistant-send:hover{background:var(--green-mid)}
+.assistant-send:disabled{opacity:.5;cursor:not-allowed}
+.assistant-examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.assistant-example{font-size:11.5px;color:var(--green);background:var(--green-light);border:1px solid #c9e8d5;padding:5px 10px;border-radius:100px;cursor:pointer;font-family:inherit;transition:all .15s}
+.assistant-example:hover{background:var(--green);color:#fff}
+.voice-status{display:none;align-items:center;gap:8px;margin-top:14px;font-size:12.5px;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:8px 12px;border-radius:10px}
+.voice-status.active{display:flex}
+.voice-status-dot{width:8px;height:8px;border-radius:50%;background:var(--green-mid);flex-shrink:0;animation:pulse 1s infinite}
+.assistant-results{margin-top:20px;display:none}
+.assistant-results.active{display:block}
+.structured-block{background:var(--ink);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.structured-block-label{color:rgba(255,255,255,.5);font-size:10px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between}
+.structured-json{color:#a7f3d0;font-family:'SF Mono',Consolas,monospace;font-size:11.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.confidence-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;letter-spacing:.02em}
+.conf-high{background:#dcfce7;color:#166534}
+.conf-medium{background:#fef3c7;color:#92400e}
+.conf-low{background:#fef2f2;color:#b91c1c}
+.result-card{border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;background:#fff}
+.result-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.result-name{font-size:14.5px;font-weight:600;color:var(--ink)}
+.result-why{font-size:12px;color:var(--green);margin-bottom:8px}
+.result-row{font-size:12px;color:var(--ink2);margin-bottom:5px;line-height:1.6}
+.result-row b{color:var(--ink);font-weight:600}
+.result-source{font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.assistant-empty{font-size:13px;color:var(--muted);background:var(--surface);border-radius:10px;padding:14px;text-align:center}
+.responsible-note{font-size:11.5px;color:var(--ink2);background:var(--amber-light);border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-top:14px;line-height:1.6}
+.walkthrough-note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px}
+.walkthrough-note code{background:var(--surface);padding:1px 6px;border-radius:4px;color:var(--green)}
+
+/* CHECKLIST INTERACTIVITY */
+.cc-progress-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.cc-progress-label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:5px}
+.cc-progress-track{height:6px;background:var(--border);border-radius:100px;overflow:hidden}
+.cc-progress-fill{height:100%;background:var(--green-mid);border-radius:100px;transition:width .3s ease;width:0%}
+.cc-item{cursor:pointer}
+.cc-item input{accent-color:var(--green);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.cc-item.checked span{color:var(--muted);text-decoration:line-through}
+.cc-footer.cc-complete{background:var(--green);color:#fff}
+
+/* RESPONSIVE */
+@media(max-width:1440px){
+  .section-inner,.nav-inner,.lang-bar-inner{max-width:1000px}
+}
+@media(max-width:1280px){
+  .hero-inner{gap:2.5rem}
+}
+@media(max-width:1024px){
+  .section-inner,.nav-inner,.lang-bar-inner{max-width:880px}
+  .how-grid{gap:2rem}
+  .tech-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+}
+@media(max-width:768px){
+  .hero-inner,.how-grid,.map-grid{grid-template-columns:1fr}
+  .roadmap{grid-template-columns:1fr}
+  .nav-links{display:none}
+  h1{font-size:2rem}
+  .hero-stats{flex-wrap:wrap}
+  nav{padding:0 1.2rem}
+  section{padding:56px 1.2rem}
+  .lang-bar{padding:8px 1.2rem}
+  .lang-same-toggle{margin-left:0;width:100%}
+  .assistant-card{padding:18px;border-radius:16px}
+  .wa-demo-wrap{max-width:100%}
+}
+@media(max-width:480px){
+  .assistant-input-wrap{flex-direction:column;align-items:stretch}
+  .assistant-mic,.assistant-send{width:100%;height:44px;border-radius:10px}
+  .hero-stats{gap:14px 20px}
+  .hero-btns{flex-direction:column}
+  .hero-btns a{text-align:center}
+  .persona{padding:14px}
+  .result-card-top{flex-direction:column}
+  .chart-header{flex-direction:column}
+}
+@media(max-width:360px){
+  section{padding:44px .9rem}
+  h1{font-size:1.7rem}
+  .hero-eyebrow{font-size:10px}
+  .nav-brand{font-size:13px}
+  .assistant-badge{font-size:9.5px}
+}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* TYPING INDICATOR */
+.typing{display:flex;align-items:center;gap:4px;padding:10px 14px;background:#fff;border-radius:10px;border-bottom-left-radius:2px;align-self:flex-start;opacity:0;transition:opacity .3s;box-shadow:0 1px 2px rgba(0,0,0,0.08)}
+.typing.show{opacity:1}
+.typing span{width:6px;height:6px;border-radius:50%;background:#aaa;animation:typing-dot 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typing-dot{0%,80%,100%{transform:scale(1);opacity:.5}40%{transform:scale(1.3);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+      </div>
+      <span class="nav-brand">Vaani<span>Setu</span></span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#assistant">Try it live</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#demo">WhatsApp demo</a></li>
+      <li><a href="#impact">Impact</a></li>
+      <li><a href="#tech">Tech</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('assistant').scrollIntoView({behavior:'smooth'})">Try Demo</button>
+  </div>
+</nav>
+
+<!-- LANGUAGE BAR -->
+<div class="lang-bar">
+  <div class="lang-bar-inner">
+    <span class="lang-bar-label">🌐 Language</span>
+    <select class="lang-select" id="langSelect" onchange="onLanguageChange()">
+      <option value="auto">Auto Detect</option>
+      <option value="en">English</option>
+      <option value="hi">हिन्दी (Hindi)</option>
+      <option value="mr">मराठी (Marathi)</option>
+      <option value="ta">தமிழ் (Tamil)</option>
+      <option value="te">తెలుగు (Telugu)</option>
+      <option value="bn">বাংলা (Bengali)</option>
+    </select>
+    <label class="lang-same-toggle">
+      <input type="checkbox" id="sameLangToggle" checked onchange="onLanguageChange()"/>
+      Respond in the same language as my question
+    </label>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-eyebrow">Voice-first welfare navigator · Prototype</div>
+      <h1>Welfare that <strong>speaks</strong> your language</h1>
+      <p class="hero-hindi devanagari">वाणी सेतु — आपकी भाषा में, आपके अधिकारों तक</p>
+      <p class="hero-desc">India has 500+ welfare schemes worth ₹lakhs per family. Most eligible people never claim them — not because they don't need help, but because the information is in English, behind apps, and locked in forms. VaaniSetu fixes this with a single WhatsApp voice note.</p>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num">500+</div><div class="stat-label">Active welfare schemes</div></div>
+        <div class="stat"><div class="stat-num">450M</div><div class="stat-label">Informal workers</div></div>
+        <div class="stat"><div class="stat-num">₹0</div><div class="stat-label">Cost to users</div></div>
+        <div class="stat"><div class="stat-num">10+</div><div class="stat-label">Indian languages</div></div>
+      </div>
+      <div class="hero-btns">
+        <a href="#demo" class="btn-primary">▶ Watch it work</a>
+        <a href="#impact" class="btn-secondary">See the gap →</a>
+      </div>
+    </div>
+    <div class="persona-cards">
+      <div class="persona reveal">
+        <div class="persona-header">
+          <div class="persona-avatar av-rekha">👩🌾</div>
+          <div>
+            <div class="persona-name">Rekha, 48 — Vidarbha, Maharashtra</div>
+            <div class="persona-meta">Widow · 2-acre farmer · Monthly income ₹7,000</div>
+          </div>
+        </div>
+        <p class="persona-problem">"I heard there are schemes for farmers and widows, but the anganwadi worker showed me a website in English. I couldn't understand. I gave up."</p>
+        <div class="persona-money">
+          <div>
+            <div class="persona-money-label">Entitled to</div>
+            <div class="persona-money-amt">₹36,000 / year</div>
+          </div>
+          <span class="persona-unclaimed">Never claimed</span>
+        </div>
+      </div>
+      <div class="persona reveal" style="transition-delay:.1s">
+        <div class="persona-header">
+          <div class="persona-avatar av-suresh">👷</div>
+          <div>
+            <div class="persona-name">Suresh, 28 — Chennai (from Bihar)</div>
+            <div class="persona-meta">Migrant construction worker · Tamil-speaking city</div>
+          </div>
+        </div>
+        <p class="persona-problem">"Main Hindi mein baat karta hoon. Yahan sab Tamil mein hai. Mujhe pata hi nahi kaunsi schemes hain mere liye."</p>
+        <div class="persona-money">
+          <div>
+            <div class="persona-money-label">Entitled to</div>
+            <div class="persona-money-amt">₹18,000 / year</div>
+          </div>
+          <span class="persona-unclaimed">Never claimed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE AI ASSISTANT (functional MVP) -->
+<section class="assistant-section" id="assistant">
+  <div class="section-inner">
+    <p class="section-eyebrow">Try it — live prototype</p>
+    <h2 class="section-title">Ask <strong>VaaniSetu</strong> in your own words</h2>
+    <p class="section-sub">Type or speak a question the way Rekha or Suresh would. This runs a real (rule-based, in-browser) understanding → matching pipeline against a structured scheme database — not a canned script. See <a href="#tech-notes" style="color:var(--green)">how this differs from production</a> below.</p>
+
+    <div class="assistant-card">
+      <span class="assistant-badge" id="pipelineBadge">🔧 Demo pipeline · rule-based understanding, not a live LLM call</span>
+
+      <div class="assistant-input-wrap">
+        <textarea class="assistant-textarea" id="assistantInput" placeholder="Type your question… e.g. मैं महाराष्ट्र में रहती हूं और विधवा हूं, मेरे लिए कौन सी योजना है?" rows="2"></textarea>
+        <button class="assistant-mic" id="micBtn" onclick="toggleListening()" title="Speak your question" aria-label="Speak your question">
+          <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>
+        </button>
+        <button class="assistant-send" id="sendBtn" onclick="runAssistant()">Ask</button>
+      </div>
+
+      <div class="assistant-examples">
+        <button class="assistant-example" onclick="fillExample('hi')">🇮🇳 Hindi widow-farmer query</button>
+        <button class="assistant-example" onclick="fillExample('mr')">🌾 Marathi farmer query</button>
+        <button class="assistant-example" onclick="fillExample('en')">🏠 English housing query</button>
+      </div>
+
+      <div class="voice-status" id="voiceStatus">
+        <div class="voice-status-dot"></div>
+        <span id="voiceStatusText">Ready to listen</span>
+      </div>
+
+      <div class="assistant-results" id="assistantResults"></div>
+
+      <p class="walkthrough-note" id="tech-notes">Understanding uses <code>AIService.extractStructuredInfo()</code> (keyword/pattern rules here — swappable for GPT-4o/Gemini). Matching uses <code>matchSchemes()</code> against <code>SCHEME_DATABASE</code>. Voice uses <code>SpeechService</code> (browser Web Speech API here — swappable for Sarvam AI).</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-inner">
+    <p class="section-eyebrow">How it works</p>
+    <h2 class="section-title">From voice note to <strong>scheme list</strong> in 60 seconds</h2>
+    <p class="section-sub">No app. No English. No literacy required. Just WhatsApp — which 500 million Indians already use.</p>
+    <div class="how-grid">
+      <div class="how-steps">
+        <div class="how-step reveal">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">User sends a voice note</div>
+            <div class="step-desc">Rekha opens WhatsApp and sends a voice message in Hindi: "Mera naam Rekha hai, Maharashtra mein rehti hoon, do acre zameen hai, vidhwa hoon…"</div>
+            <span class="step-tag tag-whatsapp">WhatsApp Cloud API</span>
+          </div>
+        </div>
+        <div class="how-step reveal" style="transition-delay:.1s">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Sarvam AI transcribes in her language</div>
+            <div class="step-desc">The audio is transcribed using Sarvam AI's Indic-native speech model — supports Hindi, Marathi, Tamil, Telugu, Bengali, and 6 more languages.</div>
+            <span class="step-tag tag-sarvam">Sarvam AI — Indic STT</span>
+          </div>
+        </div>
+        <div class="how-step reveal" style="transition-delay:.2s">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">LLM matches schemes with confidence scoring</div>
+            <div class="step-desc">GPT-4o matches her profile against 24 central + state schemes. Each match returns a confidence score — borderline cases are flagged for human review, not given wrong advice.</div>
+            <span class="step-tag tag-llm">GPT-4o · Scheme DB · Confidence Scoring</span>
+          </div>
+        </div>
+        <div class="how-step reveal" style="transition-delay:.3s">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Voice response + document checklist</div>
+            <div class="step-desc">Rekha hears a clear audio reply naming her schemes, benefit amounts, and exactly what documents to bring. A document checklist card is sent alongside — she can show it at the CSC.</div>
+            <span class="step-tag tag-sarvam">Sarvam AI — Indic TTS</span>
+          </div>
+        </div>
+        <div class="how-step reveal" style="transition-delay:.4s">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <div class="step-title">Nearest CSC pin + follow-up reminder</div>
+            <div class="step-desc">VaaniSetu sends a Google Maps pin to the nearest Common Service Centre. 7 days later, it follows up: "Rekha ji, did you visit the CSC? Reply YES/NO."</div>
+            <span class="step-tag tag-maps">Google Maps API · Follow-up Loop</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- WHATSAPP SIMULATOR -->
+      <div id="demo">
+        <div class="wa-demo-wrap">
+          <div class="wa-header">
+            <div class="wa-avatar">🤖</div>
+            <div class="wa-info">
+              <div class="wa-name">VaaniSetu</div>
+              <div class="wa-status">● Online — replies in your language</div>
+            </div>
+            <div class="wa-icons">
+              <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            </div>
+          </div>
+          <div class="wa-body" id="waBody">
+            <div class="wa-date">Today</div>
+          </div>
+          <div class="wa-footer">
+            <div class="wa-input">Type a message…</div>
+            <div class="wa-mic">
+              <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>
+            </div>
+            <div class="wa-send">
+              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="demo-controls">
+          <button class="play-btn" id="playBtn" onclick="startDemo()">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Play demo conversation
+          </button>
+          <button class="reset-btn" onclick="resetDemo()">↺ Reset</button>
+        </div>
+        <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">🔊 Bot replies as voice bubbles — tap ▶ on any green button to hear Hindi audio · Rekha's voice query → AI scheme matching → spoken reply</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOCUMENT CHECKLIST -->
+<section class="checklist-section">
+  <div class="section-inner">
+    <p class="section-eyebrow">Document checklist</p>
+    <h2 class="section-title">VaaniSetu sends this <strong>directly in WhatsApp</strong></h2>
+    <p class="section-sub">After matching schemes, users receive a visual checklist they can show at the CSC or gram panchayat — no printing, no writing needed.</p>
+    <div class="checklist-grid">
+      <div class="checklist-card reveal">
+        <div class="cc-header">
+          <div class="cc-icon" style="background:#fef3c7">🌾</div>
+          <div>
+            <div class="cc-scheme">PM Kisan Samman Nidhi</div>
+            <div class="cc-benefit">₹6,000 / year (₹2,000 × 3 instalments)</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-label">Documents required</div>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Aadhaar Card</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Land ownership document (7/12 extract)</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Bank passbook (any nationalised bank)</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Mobile number linked to Aadhaar</span></label>
+          <div class="cc-progress-wrap"><div class="cc-progress-label"><span>Documents ready</span><span class="cc-progress-pct">0%</span></div><div class="cc-progress-track"><div class="cc-progress-fill"></div></div></div>
+          <div class="cc-footer">📍 Go to nearest Common Service Centre (CSC) · Free registration</div>
+        </div>
+      </div>
+      <div class="checklist-card reveal" style="transition-delay:.1s">
+        <div class="cc-header">
+          <div class="cc-icon" style="background:#dbeafe">🏥</div>
+          <div>
+            <div class="cc-scheme">Ayushman Bharat PM-JAY</div>
+            <div class="cc-benefit">₹5 lakh / year health cover (free)</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-label">Documents required</div>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Aadhaar Card</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Ration Card (SECC list verification)</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Income certificate (if needed)</span></label>
+          <div class="cc-progress-wrap"><div class="cc-progress-label"><span>Documents ready</span><span class="cc-progress-pct">0%</span></div><div class="cc-progress-track"><div class="cc-progress-fill"></div></div></div>
+          <div class="cc-footer">📍 Any empanelled government hospital · Walk-in with documents</div>
+        </div>
+      </div>
+      <div class="checklist-card reveal" style="transition-delay:.2s">
+        <div class="cc-header">
+          <div class="cc-icon" style="background:#fce7f3">🏠</div>
+          <div>
+            <div class="cc-scheme">PM Awas Yojana (Gramin)</div>
+            <div class="cc-benefit">₹1.2–1.5 lakh housing grant</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-label">Documents required</div>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Aadhaar Card + Bank account</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>SECC-2011 survey inclusion proof</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Land ownership / No objection cert.</span></label>
+          <div class="cc-progress-wrap"><div class="cc-progress-label"><span>Documents ready</span><span class="cc-progress-pct">0%</span></div><div class="cc-progress-track"><div class="cc-progress-fill"></div></div></div>
+          <div class="cc-footer">📍 Gram Panchayat office · Apply through Gram Rozgar Sewak</div>
+        </div>
+      </div>
+      <div class="checklist-card reveal" style="transition-delay:.3s">
+        <div class="cc-header">
+          <div class="cc-icon" style="background:#d1fae5">👩‍👧</div>
+          <div>
+            <div class="cc-scheme">NSAP Widow Pension</div>
+            <div class="cc-benefit">₹300–500 / month (state top-up extra)</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-label">Documents required</div>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Aadhaar + Husband's death certificate</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>BPL certificate</span></label>
+          <label class="cc-item"><input type="checkbox" onchange="toggleDoc(this)"><span>Bank passbook</span></label>
+          <div class="cc-progress-wrap"><div class="cc-progress-label"><span>Documents ready</span><span class="cc-progress-pct">0%</span></div><div class="cc-progress-track"><div class="cc-progress-fill"></div></div></div>
+          <div class="cc-footer">📍 District Social Welfare Office · Free to apply</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCHEME GAP CHART -->
+<section id="impact">
+  <div class="section-inner">
+    <p class="section-eyebrow">The gap VaaniSetu bridges</p>
+    <h2 class="section-title">Eligible vs claimed — <strong>the invisible crisis</strong></h2>
+    <p class="section-sub">Hundreds of crores in welfare money goes unclaimed every year. Not because people don't need it. Because no one told them in a language they understand.</p>
+    <div class="chart-wrap reveal">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Eligible population vs actual claimants — major schemes</div>
+          <div class="chart-sub">Source: DBT Bharat Portal, NSSO 2023, Ministry of Agriculture data</div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot ld-eligible"></div>Eligible</div>
+          <div class="legend-item"><div class="legend-dot ld-claimed"></div>Claimed</div>
+        </div>
+      </div>
+      <canvas id="gapChart"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- CSC MAP -->
+<section class="map-section">
+  <div class="section-inner">
+    <div class="map-grid">
+      <div>
+        <p class="section-eyebrow">Last-mile delivery</p>
+        <h2 class="section-title" style="color:#fff">VaaniSetu sends the <strong style="color:var(--wa-green)">exact location</strong></h2>
+        <p class="section-sub">After scheme matching, the bot automatically sends a Google Maps pin to the nearest Common Service Centre — the last step is getting there.</p>
+        <div class="map-info">
+          <div class="map-stat-card">
+            <div class="msc-num">5.5 Lakh+</div>
+            <div class="msc-label">Common Service Centres across India</div>
+            <div class="msc-desc">Every CSC can process government scheme applications for free. VaaniSetu navigates users to the one closest to them.</div>
+          </div>
+          <div class="map-stat-card">
+            <div class="msc-num">IVRS fallback</div>
+            <div class="msc-label">For users without internet</div>
+            <div class="msc-desc">Sarvam AI supports IVR (phone call) mode — users with only 2G or basic phones can call a number and get the same service. No WhatsApp required.</div>
+          </div>
+        </div>
+      </div>
+      <div class="map-frame">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d967369.4655661755!2d73.31544!3d19.759!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sCommon%20Service%20Centre%20Maharashtra!5e0!3m2!1sen!2sin!4v1700000000000"
+          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          title="Common Service Centres in Maharashtra">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech">
+  <div class="section-inner">
+    <p class="section-eyebrow">Technology</p>
+    <h2 class="section-title">Built on <strong>real, production-ready</strong> infrastructure</h2>
+    <p class="section-sub">Every component is available today, at low or zero cost, and already deployed at Indian scale.</p>
+    <div class="tech-grid">
+      <div class="tech-card reveal">
+        <div class="tc-icon">🗣️</div>
+        <div class="tc-name">Sarvam AI</div>
+        <div class="tc-role">Indic-native speech-to-text and text-to-speech. Supports 10+ Indian languages including Hindi, Marathi, Tamil, Telugu, Bengali.</div>
+        <span class="tc-badge">Core AI</span>
+      </div>
+      <div class="tech-card reveal" style="transition-delay:.05s">
+        <div class="tc-icon">💬</div>
+        <div class="tc-name">WhatsApp Cloud API</div>
+        <div class="tc-role">Meta's official free API. Handles voice notes, text, images, and location pins. 500M Indian users already on platform.</div>
+        <span class="tc-badge">Delivery</span>
+      </div>
+      <div class="tech-card reveal" style="transition-delay:.1s">
+        <div class="tc-icon">🧠</div>
+        <div class="tc-name">GPT-4o / Gemini 1.5</div>
+        <div class="tc-role">Natural language understanding + scheme eligibility reasoning. Returns confidence scores per match to prevent wrong advice.</div>
+        <span class="tc-badge">Intelligence</span>
+      </div>
+      <div class="tech-card reveal" style="transition-delay:.15s">
+        <div class="tc-icon">📋</div>
+        <div class="tc-name">Scheme Database</div>
+        <div class="tc-role">24 central + state schemes with structured eligibility criteria, benefit amounts, documents required, and application endpoints.</div>
+        <span class="tc-badge">Knowledge</span>
+      </div>
+      <div class="tech-card reveal" style="transition-delay:.2s">
+        <div class="tc-icon">🗺️</div>
+        <div class="tc-name">Google Maps API</div>
+        <div class="tc-role">Nearest CSC finder using user's district. Returns a shareable WhatsApp pin with walking/driving directions.</div>
+        <span class="tc-badge">Navigation</span>
+      </div>
+      <div class="tech-card reveal" style="transition-delay:.25s">
+        <div class="tc-icon">⚡</div>
+        <div class="tc-name">Node.js + Render</div>
+        <div class="tc-role">Lightweight webhook server. Deployable in minutes on free tier. Handles 1000s of concurrent WhatsApp conversations.</div>
+        <span class="tc-badge">Backend</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section style="background:var(--surface)">
+  <div class="section-inner">
+    <p class="section-eyebrow">What comes next</p>
+    <h2 class="section-title">From <strong>MVP to infrastructure</strong></h2>
+    <p class="section-sub">VaaniSetu is designed to be white-labelled by CSCs and state governments — making it self-sustaining after launch.</p>
+    <div class="roadmap">
+      <div class="rm-card rm-1 reveal">
+        <div class="rm-phase">NOW · MVP</div>
+        <div class="rm-title">Core voice flow</div>
+        <div class="rm-items">
+          ✓ Voice intake in 4 languages<br>
+          ✓ 24 scheme matching<br>
+          ✓ Document checklist<br>
+          ✓ CSC pin delivery<br>
+          ✓ Follow-up reminder
+        </div>
+      </div>
+      <div class="rm-card rm-2 reveal" style="transition-delay:.1s">
+        <div class="rm-phase">NEXT · SCALE</div>
+        <div class="rm-title">Reach expansion</div>
+        <div class="rm-items">
+          → 10+ Indian languages<br>
+          → IVRS phone call fallback<br>
+          → ASHA worker companion<br>
+          → Application status tracking<br>
+          → Aadhaar pre-fill (optional)
+        </div>
+      </div>
+      <div class="rm-card rm-3 reveal" style="transition-delay:.2s">
+        <div class="rm-phase">FUTURE · INFRASTRUCTURE</div>
+        <div class="rm-title">Platform play</div>
+        <div class="rm-items">
+          → CSC white-label API<br>
+          → State government integration<br>
+          → NGO pilot (Gram Vaani)<br>
+          → Scheme gap analytics dashboard<br>
+          → Epidemic / disaster scheme alerts
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Built by <strong>Sakshi Wankhade</strong> · Government Schemes & Entitlements</p>
+  <div class="footer-badges">
+    <span class="fb">🏗️ Sakshi Wankhade — Developer</span>
+    <span class="fb">📍 Pune, Maharashtra</span>
+  </div>
+</footer>
+
+<script>
+/* ============================================================================
+   CODE WALKTHROUGH GUIDE — for a 2–3 minute technical interview walkthrough,
+   these are the 5 modules that matter (search for these names in this file):
+
+   1. SCHEME_DATABASE        — structured source-of-truth scheme data (the AI
+                                model never invents scheme facts; it only
+                                reasons over this array).
+   2. AIService               — query-understanding layer. extractStructuredInfo()
+                                turns free text into a structured profile.
+                                Rule-based here; swap the function body for a
+                                real GPT-4o/Gemini call behind a backend route
+                                in production (never call an LLM key from the
+                                browser).
+   3. matchSchemes()          — eligibility matching + confidence scoring.
+                                Pure function: profile in, ranked schemes out.
+   4. SpeechService            — speech-to-text / text-to-speech abstraction.
+                                Browser Web Speech API implementation here;
+                                same interface would be backed by Sarvam AI
+                                (Indic-native STT/TTS) in production.
+   5. runAssistant()           — UI orchestration: wires the pipeline
+                                (input → language → AIService → matchSchemes →
+                                render) to the DOM. Mirrors the architecture
+                                diagram in the product story above.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------------------
+   1. UI TRANSLATIONS — minimal i18n dictionary for key interactive labels.
+   Not a full localization system; covers the assistant module + checklist
+   so the live demo can flip between languages during a walkthrough.
+--------------------------------------------------------------------------- */
+const UI_STRINGS = {
+  en: { placeholder: 'Type your question… e.g. I live in Maharashtra and I am a widow, which scheme is for me?', ask: 'Ask', listening: 'Listening…', processing: 'Processing…', understanding: 'Understanding your request…', finding: 'Finding relevant schemes…', ready: 'Response ready', readyToListen: 'Ready to listen', noMatch: 'Your information is not sufficient to confidently identify an eligible scheme. Please provide more details (state, occupation, family situation) or contact a CSC / help center.', responsibleNote: 'VaaniSetu provides guidance based on available information. Please verify eligibility and current scheme details through the official government source before applying.', mayBeEligible: 'You may be eligible based on the information provided.', why: 'Why this may be relevant', benefits: 'Benefits', eligibility: 'Eligibility', documents: 'Documents needed', apply: 'How to apply', source: 'Official source', demoData: 'Demo data — always verify on the official source before applying.' },
+  hi: { placeholder: 'अपना सवाल लिखें… जैसे: मैं महाराष्ट्र में रहती हूं और विधवा हूं, मेरे लिए कौन सी योजना है?', ask: 'पूछें', listening: 'सुन रहे हैं…', processing: 'प्रोसेस हो रहा है…', understanding: 'आपकी बात समझी जा रही है…', finding: 'योजनाएं खोजी जा रही हैं…', ready: 'जवाब तैयार है', readyToListen: 'सुनने के लिए तैयार', noMatch: 'दी गई जानकारी योजना निश्चित करने के लिए पर्याप्त नहीं है। कृपया अधिक जानकारी दें (राज्य, पेशा, पारिवारिक स्थिति) या नज़दीकी CSC/सहायता केंद्र से संपर्क करें।', responsibleNote: 'वाणी सेतु उपलब्ध जानकारी के आधार पर मार्गदर्शन देता है। आवेदन से पहले कृपया आधिकारिक सरकारी स्रोत से पात्रता और योजना की मौजूदा जानकारी की पुष्टि करें।', mayBeEligible: 'दी गई जानकारी के आधार पर आप पात्र हो सकते हैं।', why: 'यह प्रासंगिक क्यों हो सकता है', benefits: 'लाभ', eligibility: 'पात्रता', documents: 'आवश्यक दस्तावेज़', apply: 'आवेदन कैसे करें', source: 'आधिकारिक स्रोत', demoData: 'डेमो डेटा — आवेदन से पहले हमेशा आधिकारिक स्रोत पर पुष्टि करें।' },
+  mr: { placeholder: 'तुमचा प्रश्न लिहा… उदा: मी महाराष्ट्रात राहते आणि विधवा आहे, माझ्यासाठी कोणती योजना आहे?', ask: 'विचारा', listening: 'ऐकत आहे…', processing: 'प्रक्रिया सुरू आहे…', understanding: 'तुमची विनंती समजून घेत आहे…', finding: 'योग्य योजना शोधत आहे…', ready: 'उत्तर तयार आहे', readyToListen: 'ऐकण्यासाठी तयार', noMatch: 'दिलेली माहिती पुरेशी नाही. कृपया अधिक तपशील द्या (राज्य, व्यवसाय, कौटुंबिक स्थिती) किंवा जवळच्या CSC/मदत केंद्राशी संपर्क साधा.', responsibleNote: 'वाणी सेतु उपलब्ध माहितीच्या आधारे मार्गदर्शन देते. अर्ज करण्यापूर्वी कृपया अधिकृत सरकारी स्रोताकडून पात्रता तपासा.', mayBeEligible: 'दिलेल्या माहितीनुसार तुम्ही पात्र असू शकता.', why: 'हे संबंधित का असू शकते', benefits: 'लाभ', eligibility: 'पात्रता', documents: 'आवश्यक कागदपत्रे', apply: 'अर्ज कसा करावा', source: 'अधिकृत स्रोत', demoData: 'डेमो डेटा — अर्ज करण्यापूर्वी नेहमी अधिकृत स्रोताची खात्री करा.' },
+  ta: { placeholder: 'உங்கள் கேள்வியை தட்டச்சு செய்யவும்… எ.கா: நான் மகாராஷ்டிராவில் வசிக்கிறேன், விதவை, எனக்கு எந்த திட்டம் பொருந்தும்?', ask: 'கேள்', listening: 'கேட்கிறது…', processing: 'செயலாக்கப்படுகிறது…', understanding: 'உங்கள் கோரிக்கையைப் புரிந்துகொள்கிறது…', finding: 'பொருத்தமான திட்டங்களைத் தேடுகிறது…', ready: 'பதில் தயார்', readyToListen: 'கேட்க தயார்', noMatch: 'கொடுக்கப்பட்ட தகவல் போதுமானதாக இல்லை. மேலும் விவரங்களை (மாநிலம், தொழில், குடும்ப நிலை) தரவும் அல்லது அருகிலுள்ள CSC/உதவி மையத்தை தொடர்பு கொள்ளவும்.', responsibleNote: 'கிடைக்கும் தகவலின் அடிப்படையில் வாணி சேது வழிகாட்டுதலை வழங்குகிறது. விண்ணப்பிக்கும் முன் அதிகாரப்பூர்வ அரசு ஆதாரத்தில் தகுதியை உறுதிப்படுத்தவும்.', mayBeEligible: 'கொடுக்கப்பட்ட தகவலின் அடிப்படையில் நீங்கள் தகுதி பெறலாம்.', why: 'இது ஏன் பொருந்தலாம்', benefits: 'நன்மைகள்', eligibility: 'தகுதி', documents: 'தேவையான ஆவணங்கள்', apply: 'விண்ணப்பிப்பது எப்படி', source: 'அதிகாரப்பூர்வ ஆதாரம்', demoData: 'டெமோ தரவு — விண்ணப்பிக்கும் முன் எப்போதும் அதிகாரப்பூர்வ ஆதாரத்தில் சரிபார்க்கவும்.' },
+  te: { placeholder: 'మీ ప్రశ్నను టైప్ చేయండి… ఉదా: నేను మహారాష్ట్రలో ఉంటున్నాను, వితంతువును, నాకు ఏ పథకం వర్తిస్తుంది?', ask: 'అడగండి', listening: 'వింటోంది…', processing: 'ప్రాసెస్ అవుతోంది…', understanding: 'మీ అభ్యర్థనను అర్థం చేసుకుంటోంది…', finding: 'సంబంధిత పథకాలను వెతుకుతోంది…', ready: 'సమాధానం సిద్ధంగా ఉంది', readyToListen: 'వినడానికి సిద్ధంగా ఉంది', noMatch: 'ఇచ్చిన సమాచారం సరిపోదు. దయచేసి మరిన్ని వివరాలు (రాష్ట్రం, వృత్తి, కుటుంబ పరిస్థితి) ఇవ్వండి లేదా సమీప CSC/సహాయ కేంద్రాన్ని సంప్రదించండి.', responsibleNote: 'అందుబాటులో ఉన్న సమాచారం ఆధారంగా వాణి సేతు మార్గదర్శకత్వం అందిస్తుంది. దరఖాస్తు చేసే ముందు దయచేసి అధికారిక ప్రభుత్వ మూలం నుండి అర్హతను నిర్ధారించుకోండి.', mayBeEligible: 'ఇచ్చిన సమాచారం ఆధారంగా మీరు అర్హులు కావచ్చు.', why: 'ఇది ఎందుకు సంబంధితంగా ఉండవచ్చు', benefits: 'ప్రయోజనాలు', eligibility: 'అర్హత', documents: 'అవసరమైన పత్రాలు', apply: 'ఎలా దరఖాస్తు చేయాలి', source: 'అధికారిక మూలం', demoData: 'డెమో డేటా — దరఖాస్తు చేసే ముందు ఎల్లప్పుడూ అధికారిక మూలంలో నిర్ధారించుకోండి.' },
+  bn: { placeholder: 'আপনার প্রশ্ন লিখুন… যেমন: আমি মহারাষ্ট্রে থাকি এবং বিধবা, আমার জন্য কোন প্রকল্প আছে?', ask: 'জিজ্ঞাসা করুন', listening: 'শুনছে…', processing: 'প্রক্রিয়াকরণ হচ্ছে…', understanding: 'আপনার অনুরোধ বোঝা হচ্ছে…', finding: 'প্রাসঙ্গিক প্রকল্প খোঁজা হচ্ছে…', ready: 'উত্তর প্রস্তুত', readyToListen: 'শোনার জন্য প্রস্তুত', noMatch: 'প্রদত্ত তথ্য পর্যাপ্ত নয়। অনুগ্রহ করে আরও বিবরণ দিন (রাজ্য, পেশা, পারিবারিক অবস্থা) অথবা নিকটতম CSC/সহায়তা কেন্দ্রের সাথে যোগাযোগ করুন।', responsibleNote: 'বাণী সেতু উপলব্ধ তথ্যের ভিত্তিতে দিকনির্দেশনা প্রদান করে। আবেদন করার আগে অনুগ্রহ করে সরকারি অফিসিয়াল উৎস থেকে যোগ্যতা যাচাই করুন।', mayBeEligible: 'প্রদত্ত তথ্যের ভিত্তিতে আপনি যোগ্য হতে পারেন।', why: 'এটি কেন প্রাসঙ্গিক হতে পারে', benefits: 'সুবিধা', eligibility: 'যোগ্যতা', documents: 'প্রয়োজনীয় নথি', apply: 'কীভাবে আবেদন করবেন', source: 'সরকারি উৎস', demoData: 'ডেমো ডেটা — আবেদনের আগে সর্বদা সরকারি উৎসে যাচাই করুন।' }
+}
+function t(key) {
+  const lang = (document.getElementById('langSelect').value === 'auto') ? currentDetectedLang || 'en' : document.getElementById('langSelect').value
+  return (UI_STRINGS[lang] && UI_STRINGS[lang][key]) || UI_STRINGS.en[key]
+}
+let currentDetectedLang = 'en'
+
+/* ---------------------------------------------------------------------------
+   1. SCHEME_DATABASE — structured source of truth. The AI layer below is only
+   ever allowed to REASON over this array, never invent a scheme or benefit.
+--------------------------------------------------------------------------- */
+const SCHEME_DATABASE = [
+  {
+    id: 'pm-kisan', icon: '🌾', name: 'PM Kisan Samman Nidhi',
+    benefits: '₹6,000/year, paid in 3 instalments of ₹2,000 directly to bank account',
+    eligibility: 'Small & marginal farmer families with cultivable landholding, subject to central exclusion criteria',
+    documents: ['Aadhaar card', 'Land ownership document (7/12 extract)', 'Bank passbook', 'Mobile number linked to Aadhaar'],
+    apply: 'Register via nearest Common Service Centre (CSC) or pmkisan.gov.in — free',
+    source: 'pmkisan.gov.in', verification: 'Demo data — verify current benefit amount at the official source',
+    match: p => p.occupation === 'farmer' || p.landAcres != null
+  },
+  {
+    id: 'ayushman-bharat', icon: '🏥', name: 'Ayushman Bharat PM-JAY',
+    benefits: '₹5 lakh/year health insurance cover per family, cashless treatment at empanelled hospitals',
+    eligibility: 'Families identified under SECC 2011 deprivation criteria; broadly low-income households',
+    documents: ['Aadhaar card', 'Ration card (for SECC verification)', 'Income certificate (if requested)'],
+    apply: 'Any empanelled government hospital, or nearest CSC for an Ayushman card',
+    source: 'pmjay.gov.in', verification: 'Demo data — check your household\'s SECC status at the official source',
+    match: p => p.need === 'health' || p.incomeLevel === 'low' || p.maritalStatus === 'widow'
+  },
+  {
+    id: 'nsap-widow', icon: '👩‍👧', name: 'NSAP — Indira Gandhi National Widow Pension',
+    benefits: '₹300–500/month central assistance (many states top this up further)',
+    eligibility: 'Widows aged 40–79, typically from BPL households (criteria vary by state)',
+    documents: ['Aadhaar card', "Husband's death certificate", 'BPL certificate', 'Bank passbook'],
+    apply: 'District Social Welfare Office or Gram Panchayat — free to apply',
+    source: 'nsap.nic.in', verification: 'Demo data — state-specific top-ups vary, confirm locally',
+    match: p => p.maritalStatus === 'widow'
+  },
+  {
+    id: 'pm-awas-gramin', icon: '🏠', name: 'PM Awas Yojana (Gramin)',
+    benefits: '₹1.2–1.5 lakh housing construction grant',
+    eligibility: 'Houseless families or those in kutcha houses, included in the SECC-2011 housing deprivation list',
+    documents: ['Aadhaar card + bank account', 'SECC-2011 survey inclusion proof', 'Land ownership / no-objection certificate'],
+    apply: 'Gram Panchayat office, through the Gram Rozgar Sewak',
+    source: 'pmayg.nic.in', verification: 'Demo data — SECC inclusion must be confirmed locally',
+    match: p => p.need === 'housing' || p.incomeLevel === 'low'
+  },
+  {
+    id: 'mgnregs', icon: '🛠️', name: 'MGNREGS (Rural Employment Guarantee)',
+    benefits: '100 days of guaranteed wage employment per household per year',
+    eligibility: 'Adult members of rural households willing to do unskilled manual work',
+    documents: ['Aadhaar card', 'Job card (issued free by Gram Panchayat)', 'Bank passbook'],
+    apply: 'Apply for a Job Card at your Gram Panchayat',
+    source: 'nrega.nic.in', verification: 'Demo data — wage rates vary by state, confirm locally',
+    match: p => p.need === 'employment' || (p.occupation === 'farmer' && p.incomeLevel === 'low')
+  },
+  {
+    id: 'ujjwala', icon: '🔥', name: 'PM Ujjwala Yojana 2.0',
+    benefits: 'Free LPG gas connection + first refill, deposit-free',
+    eligibility: 'Women from low-income households without an existing LPG connection',
+    documents: ['Aadhaar card', 'Ration card or SECC/PMAY proof', 'Bank passbook'],
+    apply: 'Nearest LPG distributor with documents, or via CSC',
+    source: 'pmuy.gov.in', verification: 'Demo data — confirm distributor availability locally',
+    match: p => p.gender === 'woman' && p.incomeLevel === 'low'
+  }
+]
+
+/* ---------------------------------------------------------------------------
+   2. AIService — provider-independent query understanding + explanation layer.
+   MOCK IMPLEMENTATION: rule/keyword based, runs entirely in-browser so the
+   prototype works with no backend or API key. A production build would
+   replace the body of extractStructuredInfo() with a call to a backend route
+   that talks to GPT-4o / Gemini (never call an LLM with a secret key directly
+   from the frontend), keeping this exact function signature so nothing else
+   in the app has to change.
+--------------------------------------------------------------------------- */
+const AIService = {
+  provider: 'mock-rule-based', // production values: 'openai' | 'gemini' via backend proxy
+
+  detectLanguage(text) {
+    if (/[\u0900-\u097F]/.test(text)) {
+      // Devanagari script is shared by Hindi and Marathi — a few common
+      // Marathi-only tokens disambiguate in this lightweight demo.
+      if (/(आहे|मी राहते|मला|तुम्ही|माझ्यासाठी)/.test(text)) return 'mr'
+      return 'hi'
+    }
+    if (/[\u0B80-\u0BFF]/.test(text)) return 'ta'
+    if (/[\u0C00-\u0C7F]/.test(text)) return 'te'
+    if (/[\u0980-\u09FF]/.test(text)) return 'bn'
+    return 'en'
+  },
+
+  // Turns free text into a structured profile. Never stores more than needed
+  // for scheme matching (no names, no ID numbers).
+  extractStructuredInfo(query, language) {
+    const q = query.toLowerCase()
+    const info = { language, state: null, district: null, occupation: null, gender: null, maritalStatus: null, landAcres: null, incomeLevel: null, need: null }
+
+    const stateMap = { 'maharashtra': 'Maharashtra', 'महाराष्ट्र': 'Maharashtra', 'tamil nadu': 'Tamil Nadu', 'तमिलनाडु': 'Tamil Nadu', 'bihar': 'Bihar', 'बिहार': 'Bihar', 'telangana': 'Telangana', 'west bengal': 'West Bengal' }
+    for (const key in stateMap) if (q.includes(key)) info.state = stateMap[key]
+
+    const districtMap = { 'wardha': 'Wardha', 'वर्धा': 'Wardha', 'pune': 'Pune', 'पुणे': 'Pune', 'chennai': 'Chennai' }
+    for (const key in districtMap) if (q.includes(key)) info.district = districtMap[key]
+
+    if (/(farmer|किसान|खेत|शेतकरी|जमीन|land|acre|एकड़)/.test(q)) info.occupation = 'farmer'
+    if (/(construction|worker|मजदूर|श्रमिक)/.test(q)) info.occupation = 'labourer'
+
+    if (/(woman|महिला|women|widow|widhwa|vidhwa|विधवा)/.test(q)) info.gender = 'woman'
+    if (/(widow|vidhwa|विधवा|husband.*died|पति.*मृत्यु)/.test(q)) info.maritalStatus = 'widow'
+
+    const acreMatch = q.match(/(\d+(\.\d+)?)\s*(acre|एकड़)/)
+    if (acreMatch) info.landAcres = parseFloat(acreMatch[1])
+
+    if (/(low income|poor|गरीब|कम आय|बीपीएल|bpl|7,?000|७,?०००)/.test(q)) info.incomeLevel = 'low'
+
+    if (/(health|hospital|इलाज|स्वास्थ्य|आरोग्य)/.test(q)) info.need = 'health'
+    else if (/(house|home|housing|घर|मकान|आवास)/.test(q)) info.need = 'housing'
+    else if (/(job|work|employment|रोजगार|काम)/.test(q)) info.need = 'employment'
+    else info.need = 'welfare schemes'
+
+    return info
+  },
+
+  // Cautious, non-committal explanation wording per Responsible-AI guidance.
+  explainMatch(scheme, profile, language) {
+    return t('mayBeEligible')
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   3. matchSchemes — eligibility matching + confidence scoring. Pure function:
+   profile in, ranked schemes out. Confidence reflects HOW MANY structured
+   signals we actually have — not a guess about eligibility itself.
+--------------------------------------------------------------------------- */
+function matchSchemes(profile) {
+  const signalsCollected = ['state', 'occupation', 'gender', 'maritalStatus', 'landAcres', 'incomeLevel', 'need']
+    .filter(k => profile[k] !== null && profile[k] !== undefined).length
+
+  const matched = SCHEME_DATABASE.filter(s => s.match(profile))
+
+  return matched.map(s => {
+    let confidence = 'low'
+    if (signalsCollected >= 4) confidence = 'high'
+    else if (signalsCollected >= 2) confidence = 'medium'
+    return { ...s, confidence }
+  }).sort((a, b) => ({ high: 3, medium: 2, low: 1 }[b.confidence] - ({ high: 3, medium: 2, low: 1 }[a.confidence])))
+}
+
+/* ---------------------------------------------------------------------------
+   4. SpeechService — provider-independent speech abstraction. Browser
+   Web Speech API implementation for this prototype. Do NOT present this as
+   equivalent to a production Indic speech engine — Web Speech API's Indian-
+   language coverage is inconsistent across browsers/devices. A production
+   build would implement this same interface against Sarvam AI's Indic STT/TTS.
+--------------------------------------------------------------------------- */
+const SpeechService = {
+  provider: 'browser-web-speech-api', // production value: 'sarvam-ai'
+  langCodeMap: { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN', ta: 'ta-IN', te: 'te-IN', bn: 'bn-IN' },
+  recognition: null,
+
+  isSupported() {
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+  },
+
+  startListening(langCode, onResult, onError) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) { onError && onError('not-supported'); return }
+    this.recognition = new SR()
+    this.recognition.lang = this.langCodeMap[langCode] || 'en-IN'
+    this.recognition.interimResults = false
+    this.recognition.maxAlternatives = 1
+    this.recognition.onresult = (e) => onResult(e.results[0][0].transcript)
+    this.recognition.onerror = (e) => onError && onError(e.error)
+    this.recognition.start()
+  },
+  stopListening() { this.recognition && this.recognition.stop() },
+
+  speak(text, langCode) {
+    if (!window.speechSynthesis) return
+    window.speechSynthesis.cancel()
+    const utter = new SpeechSynthesisUtterance(text)
+    utter.lang = this.langCodeMap[langCode] || 'en-IN'
+    window.speechSynthesis.speak(utter)
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   5. runAssistant — UI orchestration for the pipeline:
+   input → language detection → AIService → matchSchemes → render
+--------------------------------------------------------------------------- */
+function setVoiceStatus(text, show) {
+  const el = document.getElementById('voiceStatus')
+  document.getElementById('voiceStatusText').textContent = text
+  el.classList.toggle('active', !!show)
+}
+
+function fillExample(lang) {
+  const examples = {
+    hi: 'मैं महाराष्ट्र के वर्धा में रहती हूं, मेरे पास 2 एकड़ जमीन है, मैं विधवा हूं। मेरे लिए कौन सी योजनाएं हैं?',
+    mr: 'मी महाराष्ट्रात राहते, माझ्याकडे 2 एकड़ जमीन आहे, मी शेतकरी आहे. माझ्यासाठी कोणती योजना आहे?',
+    en: 'I live in Maharashtra, low income family, need help with housing. Which schemes can I apply for?'
+  }
+  document.getElementById('assistantInput').value = examples[lang]
+  if (document.getElementById('sameLangToggle').checked) {
+    document.getElementById('langSelect').value = 'auto'
+  }
+}
+
+function toggleListening() {
+  const micBtn = document.getElementById('micBtn')
+  if (!SpeechService.isSupported()) {
+    setVoiceStatus('Voice input is not supported in this browser — please type instead.', true)
+    setTimeout(() => setVoiceStatus('', false), 3000)
+    return
+  }
+  const selectedLang = document.getElementById('langSelect').value
+  const langForRecognition = selectedLang === 'auto' ? 'hi' : selectedLang
+  micBtn.classList.add('listening')
+  setVoiceStatus(t('listening'), true)
+  SpeechService.startListening(langForRecognition,
+    (transcript) => {
+      document.getElementById('assistantInput').value = transcript
+      micBtn.classList.remove('listening')
+      setVoiceStatus('', false)
+      runAssistant()
+    },
+    (err) => {
+      micBtn.classList.remove('listening')
+      setVoiceStatus('Could not hear that clearly — please try again or type your question.', true)
+      setTimeout(() => setVoiceStatus('', false), 3000)
+    }
+  )
+}
+
+async function runAssistant() {
+  const input = document.getElementById('assistantInput').value.trim()
+  const resultsEl = document.getElementById('assistantResults')
+  if (!input) return
+
+  const selectedLang = document.getElementById('langSelect').value
+  const sameLang = document.getElementById('sameLangToggle').checked
+  const detected = AIService.detectLanguage(input)
+  currentDetectedLang = selectedLang === 'auto' ? detected : (sameLang ? detected : selectedLang)
+
+  setVoiceStatus(t('processing'), true)
+  await new Promise(r => setTimeout(r, 350))
+  setVoiceStatus(t('understanding'), true)
+  const profile = AIService.extractStructuredInfo(input, currentDetectedLang)
+  await new Promise(r => setTimeout(r, 500))
+  setVoiceStatus(t('finding'), true)
+  const matches = matchSchemes(profile)
+  await new Promise(r => setTimeout(r, 400))
+  setVoiceStatus(t('ready'), true)
+  setTimeout(() => setVoiceStatus('', false), 1200)
+
+  renderAssistantResults(profile, matches)
+}
+
+function renderAssistantResults(profile, matches) {
+  const resultsEl = document.getElementById('assistantResults')
+  resultsEl.classList.add('active')
+
+  const jsonPretty = JSON.stringify(profile, null, 2)
+  let html = `
+    <div class="structured-block">
+      <div class="structured-block-label"><span>AIService.extractStructuredInfo() output</span><span>structured profile</span></div>
+      <div class="structured-json">${jsonPretty.replace(/</g,'&lt;')}</div>
+    </div>`
+
+  if (matches.length === 0) {
+    html += `<div class="assistant-empty">⚠️ ${t('noMatch')}</div>`
+  } else {
+    matches.slice(0, 4).forEach(s => {
+      html += `
+      <div class="result-card">
+        <div class="result-card-top">
+          <div class="result-name">${s.icon} ${s.name}</div>
+          <span class="confidence-badge conf-${s.confidence}">${s.confidence.toUpperCase()} CONFIDENCE</span>
+        </div>
+        <div class="result-why">${t('why')}: ${AIService.explainMatch(s, profile, profile.language)}</div>
+        <div class="result-row"><b>${t('benefits')}:</b> ${s.benefits}</div>
+        <div class="result-row"><b>${t('eligibility')}:</b> ${s.eligibility}</div>
+        <div class="result-row"><b>${t('documents')}:</b> ${s.documents.join(', ')}</div>
+        <div class="result-row"><b>${t('apply')}:</b> ${s.apply}</div>
+        <div class="result-source">${t('source')}: ${s.source} · ${t('demoData')}</div>
+      </div>`
+    })
+  }
+
+  html += `<div class="responsible-note">ℹ️ ${t('responsibleNote')}</div>`
+  resultsEl.innerHTML = html
+}
+
+function onLanguageChange() {
+  const lang = document.getElementById('langSelect').value === 'auto' ? 'en' : document.getElementById('langSelect').value
+  currentDetectedLang = lang
+  const strings = UI_STRINGS[lang] || UI_STRINGS.en
+  document.getElementById('assistantInput').placeholder = strings.placeholder
+  document.getElementById('sendBtn').textContent = strings.ask
+  document.getElementById('voiceStatusText').textContent = strings.readyToListen
+  const sameLangEl = document.getElementById('sameLangToggle')
+  document.getElementById('langSelect').disabled = false
+  sameLangEl.parentElement.style.opacity = document.getElementById('langSelect').value === 'auto' ? '0.55' : '1'
+}
+
+/* ---------------------------------------------------------------------------
+   DOCUMENT CHECKLIST — interactive check-off with live progress
+--------------------------------------------------------------------------- */
+function toggleDoc(checkbox) {
+  const item = checkbox.closest('.cc-item')
+  item.classList.toggle('checked', checkbox.checked)
+  const card = checkbox.closest('.checklist-card')
+  const boxes = card.querySelectorAll('.cc-item input[type="checkbox"]')
+  const checked = card.querySelectorAll('.cc-item input[type="checkbox"]:checked').length
+  const pct = Math.round((checked / boxes.length) * 100)
+  card.querySelector('.cc-progress-fill').style.width = pct + '%'
+  card.querySelector('.cc-progress-pct').textContent = pct + '%'
+  const footer = card.querySelector('.cc-footer')
+  footer.classList.toggle('cc-complete', pct === 100)
+  if (pct === 100) footer.textContent = '✅ All documents ready — head to your CSC or nearest office'
+}
+
+/* Init: sync assistant UI strings to default language, wire Enter-to-ask */
+onLanguageChange()
+document.getElementById('assistantInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runAssistant() }
+})
+
+/* SCROLL REVEAL */
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible') })
+}, { threshold: 0.12 })
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+
+/* CHART */
+const ctx = document.getElementById('gapChart').getContext('2d')
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['PM Kisan', 'PM-JAY\n(ABHA)', 'PM Awas\n(Gramin)', 'MGNREGS', 'NSAP\nWidow', 'Ujjwala\n2.0'],
+    datasets: [
+      {
+        label: 'Eligible (crore)',
+        data: [14.5, 50, 2.95, 15.4, 3.4, 8.9],
+        backgroundColor: 'rgba(59,130,246,0.25)',
+        borderColor: '#3b82f6',
+        borderWidth: 1.5,
+        borderRadius: 6,
+        borderSkipped: false,
+      },
+      {
+        label: 'Active claimants (crore)',
+        data: [8.1, 22, 1.8, 5.5, 1.4, 9.5],
+        backgroundColor: '#1a6b3c',
+        borderColor: '#1a6b3c',
+        borderWidth: 0,
+        borderRadius: 6,
+        borderSkipped: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0f1f0f',
+        titleColor: '#fff',
+        bodyColor: 'rgba(255,255,255,0.7)',
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} crore`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: '#6b7a6b', font: { size: 11, family: 'Inter' } }
+      },
+      y: {
+        grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+        border: { display: false },
+        ticks: {
+          color: '#6b7a6b',
+          font: { size: 11, family: 'Inter' },
+          callback: v => v + ' cr'
+        }
+      }
+    }
+  }
+})
+
+/* WHATSAPP DEMO */
+
+// Bot replies: type:'audio-in' → rendered as incoming audio bubble with TTS playback
+// ttsText = what Web Speech API speaks (Hindi)
+// hindi   = transcript shown below waveform
+const conversation = [
+  { type: 'audio-out', text: 'Namaste VaaniSetu 🙏', hindi: 'नमस्ते वाणी सेतु', duration: '0:08', delay: 600 },
+  { type: 'typing', delay: 1400 },
+  {
+    type: 'audio-in',
+    duration: '0:12',
+    hindi: 'नमस्ते! मैं वाणी सेतु हूं। अपना नाम, राज्य और परिवार के बारे में बताइए।',
+    ttsText: 'Namaste! Main VaaniSetu hoon. Apna naam, state, aur parivaar ke baare mein bataiye. Hindi mein boliye, main samjhunga.',
+    delay: 2200
+  },
+  { type: 'audio-out', text: 'Mera naam Rekha hai. Main Maharashtra ke Wardha mein rehti hoon. Mere paas 2 acre zameen hai. Main vidhwa hoon. Mahine ki kamai lagbhag 7,000 rupaye hai.', hindi: 'मेरा नाम रेखा है। मैं महाराष्ट्र के वर्धा में रहती हूं।', duration: '0:22', delay: 1000 },
+  { type: 'typing', delay: 2000 },
+  { type: 'schemes', delay: 2800 },
+  {
+    type: 'audio-in',
+    duration: '0:18',
+    hindi: 'रेखा जी, आपको चार योजनाएं मिली हैं। पीएम किसान, आयुष्मान भारत, विधवा पेंशन और पीएम आवास योजना। नजदीकी CSC का पता भेज रही हूं।',
+    ttsText: 'Rekha ji, aapko char yojanaen mili hain. PM Kisan, Ayushman Bharat, Vidhwa Pension, aur PM Awas Yojana. Nearest CSC ka location abhi bhej rahi hoon.',
+    delay: 800
+  },
+  { type: 'map-pin', delay: 600 },
+  {
+    type: 'audio-in',
+    duration: '0:08',
+    hindi: '७ दिन बाद follow-up करूंगी — CSC गईं या नहीं?',
+    ttsText: 'Saat din baad follow-up karungi — CSC gayeen ya nahi? Reply karein.',
+    delay: 700
+  },
+]
+
+let running = false, typingEl = null
+
+/* --- TTS helper: speaks Hindi text via Web Speech API --- */
+function speakHindi(text, btn) {
+  if (!window.speechSynthesis) return
+  window.speechSynthesis.cancel()
+  const utter = new SpeechSynthesisUtterance(text)
+  utter.lang = 'hi-IN'
+  utter.rate = 0.92
+  utter.pitch = 1.05
+
+  // Try to find a Hindi voice; fall back to any available voice
+  const voices = window.speechSynthesis.getVoices()
+  const hiVoice = voices.find(v => v.lang === 'hi-IN') || voices.find(v => v.lang.startsWith('hi')) || null
+  if (hiVoice) utter.voice = hiVoice
+
+  const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+  const playIcon  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+
+  btn.innerHTML = pauseIcon
+  window.speechSynthesis.speak(utter)
+
+  utter.onend = () => { btn.innerHTML = playIcon }
+  utter.onerror = () => { btn.innerHTML = playIcon }
+
+  btn._utterance = utter
+  btn._speaking = true
+}
+
+function toggleTTS(btn, text) {
+  const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+  const playIcon  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+  if (window.speechSynthesis && window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel()
+    btn.innerHTML = playIcon
+  } else {
+    speakHindi(text, btn)
+  }
+}
+
+/* --- Waveform builder --- */
+function makeWaveform(variant) {
+  const w = document.createElement('div')
+  w.className = 'audio-wave'
+  // Two slightly different waveform shapes for variety
+  const h1 = [6,10,16,20,14,22,18,12,24,16,10,20,14,8,18,22,12,16,10,20]
+  const h2 = [8,14,10,22,18,12,20,16,8,24,12,18,14,20,10,16,22,8,12,18]
+  const heights = variant === 'in' ? h2 : h1
+  heights.forEach(h => {
+    const b = document.createElement('div')
+    b.className = 'wave-bar'
+    b.style.height = h + 'px'
+    w.appendChild(b)
+  })
+  return w
+}
+
+/* --- Build an outgoing audio bubble (user, green, right) --- */
+function buildAudioOutBubble(msg, timeStr) {
+  const wrap = document.createElement('div')
+  wrap.className = 'bubble bubble-out audio-bubble'
+  const btn = document.createElement('button')
+  btn.className = 'audio-play'
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+  btn.onclick = () => {
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+    setTimeout(() => { btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' }, 2200)
+  }
+  const wave = makeWaveform('out')
+  const dur = document.createElement('span')
+  dur.className = 'audio-dur'
+  dur.textContent = msg.duration
+  const time = document.createElement('div')
+  time.className = 'bubble-time'
+  time.textContent = timeStr + ' ✓✓'
+  const inner = document.createElement('div')
+  inner.style.cssText = 'display:flex;flex-direction:column;gap:4px;width:100%'
+  const row = document.createElement('div')
+  row.style.cssText = 'display:flex;align-items:center;gap:8px'
+  row.appendChild(btn); row.appendChild(wave); row.appendChild(dur)
+  if (msg.hindi) {
+    const ht = document.createElement('div')
+    ht.className = 'devanagari'
+    ht.style.cssText = 'font-size:11px;color:rgba(0,0,0,0.5);margin-top:2px'
+    ht.textContent = msg.hindi
+    inner.appendChild(row); inner.appendChild(ht); inner.appendChild(time)
+  } else { inner.appendChild(row); inner.appendChild(time) }
+  wrap.appendChild(inner)
+  return wrap
+}
+
+/* --- Build an incoming audio bubble (bot, white, left) with TTS --- */
+function buildAudioInBubble(msg, timeStr) {
+  const wrap = document.createElement('div')
+  wrap.className = 'bubble bubble-in audio-bubble'
+  wrap.style.cssText = 'max-width:82%;background:#fff;align-self:flex-start;border-bottom-left-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.08)'
+
+  const btn = document.createElement('button')
+  btn.className = 'audio-play'
+  btn.style.background = '#25d366'
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+  btn.onclick = () => toggleTTS(btn, msg.ttsText)
+
+  // Animate wave bars while speaking
+  if (window.speechSynthesis) {
+    const origToggle = btn.onclick
+    btn.onclick = () => {
+      origToggle()
+      animateWave(wave, btn)
+    }
+  }
+
+  const wave = makeWaveform('in')
+  // Give the wave bars a slightly darker tint for incoming
+  wave.querySelectorAll && setTimeout(() => {
+    wave.querySelectorAll('.wave-bar').forEach(b => { b.style.background = 'rgba(0,0,0,0.25)' })
+  }, 0)
+
+  const dur = document.createElement('span')
+  dur.className = 'audio-dur'
+  dur.textContent = msg.duration
+
+  const time = document.createElement('div')
+  time.className = 'bubble-time'
+  time.textContent = timeStr
+
+  const inner = document.createElement('div')
+  inner.style.cssText = 'display:flex;flex-direction:column;gap:4px;width:100%'
+  const row = document.createElement('div')
+  row.style.cssText = 'display:flex;align-items:center;gap:8px'
+  row.appendChild(btn); row.appendChild(wave); row.appendChild(dur)
+
+  const ht = document.createElement('div')
+  ht.className = 'devanagari'
+  ht.style.cssText = 'font-size:11px;color:rgba(0,0,0,0.45);margin-top:2px'
+  ht.textContent = msg.hindi
+
+  inner.appendChild(row); inner.appendChild(ht); inner.appendChild(time)
+  wrap.appendChild(inner)
+  return wrap
+}
+
+/* Animate waveform bars while TTS is playing */
+function animateWave(waveEl, btn) {
+  const bars = waveEl.querySelectorAll('.wave-bar')
+  const heights = [6,14,10,22,18,12,20,16,8,24,12,18,14,20,10,16,22,8,12,18]
+  let frame = 0
+  const interval = setInterval(() => {
+    if (!window.speechSynthesis.speaking) {
+      clearInterval(interval)
+      bars.forEach((b, i) => { b.style.height = heights[i] + 'px'; b.style.background = 'rgba(0,0,0,0.25)' })
+      return
+    }
+    bars.forEach(b => {
+      const rh = Math.floor(Math.random() * 20) + 4
+      b.style.height = rh + 'px'
+      b.style.background = '#25d366'
+    })
+    frame++
+  }, 120)
+}
+
+async function startDemo() {
+  if (running) return
+  running = true
+  document.getElementById('playBtn').disabled = true
+  document.getElementById('playBtn').style.opacity = '0.5'
+
+  const d = document.getElementById('waBody')
+  const now = new Date()
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0')
+
+  for (const msg of conversation) {
+    await new Promise(res => setTimeout(res, msg.delay || 600))
+
+    if (msg.type === 'audio-out') {
+      const wrap = buildAudioOutBubble(msg, timeStr)
+      d.appendChild(wrap)
+      setTimeout(() => { wrap.classList.add('show') }, 30)
+      d.scrollTop = d.scrollHeight
+
+    } else if (msg.type === 'audio-in') {
+      const wrap = buildAudioInBubble(msg, timeStr)
+      d.appendChild(wrap)
+      setTimeout(() => { wrap.classList.add('show') }, 30)
+      d.scrollTop = d.scrollHeight
+      // Auto-play the TTS for the first bot greeting to show it off
+      if (msg === conversation[2]) {
+        setTimeout(() => {
+          const btn = wrap.querySelector('.audio-play')
+          if (btn) { speakHindi(msg.ttsText, btn); animateWave(wrap.querySelector('.audio-wave'), btn) }
+        }, 600)
+      }
+
+    } else if (msg.type === 'typing') {
+      typingEl = document.createElement('div')
+      typingEl.className = 'typing'
+      typingEl.innerHTML = '<span></span><span></span><span></span>'
+      d.appendChild(typingEl)
+      setTimeout(() => { typingEl.classList.add('show') }, 30)
+      d.scrollTop = d.scrollHeight
+      await new Promise(res => setTimeout(res, msg.delay || 1500))
+      typingEl.remove()
+
+    } else if (msg.type === 'schemes') {
+      const card = document.createElement('div')
+      card.className = 'scheme-card-bubble'
+      card.innerHTML = `
+        <div class="scb-header">✅ VaaniSetu — Aapke liye matched schemes</div>
+        <div class="scb-item"><div class="scb-dot"></div><div class="scb-text"><strong>PM Kisan Samman Nidhi</strong> — ₹6,000/saal · Aadhaar + 7/12 utara chahiye</div></div>
+        <div class="scb-item"><div class="scb-dot"></div><div class="scb-text"><strong>Ayushman Bharat PM-JAY</strong> — ₹5 lakh health cover · FREE</div></div>
+        <div class="scb-item"><div class="scb-dot"></div><div class="scb-text"><strong>NSAP Widow Pension</strong> — ₹300–500/maah · Death cert + Aadhaar</div></div>
+        <div class="scb-item"><div class="scb-dot"></div><div class="scb-text"><strong>PM Awas Yojana</strong> — ₹1.2 lakh housing grant · SECC list check</div></div>
+        <div class="scb-footer">Kisi bhi scheme ke liye — apne CSC mein jaiye. Document checklist abhi bhej rahi hoon 📋</div>
+      `
+      d.appendChild(card)
+      setTimeout(() => { card.classList.add('show') }, 30)
+      d.scrollTop = d.scrollHeight
+
+    } else if (msg.type === 'map-pin') {
+      const wrap = document.createElement('div')
+      wrap.className = 'bubble bubble-in'
+      wrap.innerHTML = `📍 <strong>Wardha CSC — 2.3 km</strong><br><span style="font-size:11px;color:#0b7a75">maps.google.com/wardha-csc → Open in Maps</span><div class="bubble-time">${timeStr}</div>`
+      d.appendChild(wrap)
+      setTimeout(() => { wrap.classList.add('show') }, 30)
+      d.scrollTop = d.scrollHeight
+    }
+
+    await new Promise(res => setTimeout(res, 200))
+  }
+
+  running = false
+  document.getElementById('playBtn').disabled = false
+  document.getElementById('playBtn').style.opacity = '1'
+  document.getElementById('playBtn').innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:white"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Demo complete — replay?'
+}
+
+function resetDemo() {
+  running = false
+  window.speechSynthesis && window.speechSynthesis.cancel()
+  if (typingEl) { typingEl.remove(); typingEl = null }
+  const d = document.getElementById('waBody')
+  d.innerHTML = '<div class="wa-date">Today</div>'
+  const btn = document.getElementById('playBtn')
+  btn.disabled = false
+  btn.style.opacity = '1'
+  btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:white"><path d="M8 5v14l11-7z"/></svg> Play demo conversation'
+}
+</script>
+</body>
+</html>
